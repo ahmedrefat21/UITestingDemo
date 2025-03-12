@@ -18,8 +18,6 @@ class UITestingBootcampView_UITests: XCTestCase {
     
     override func setUpWithError() throws {
         continueAfterFailure = false
-//        app.launchArguments = ["-UITest_startSignedIn"]
-//        app.launchEnvironment = ["-UITest_startSignedIn2" : "true"]
         app.launch()
     }
 
@@ -96,16 +94,31 @@ class UITestingBootcampView_UITests: XCTestCase {
         XCTAssertTrue(navBar.exists)
     }
     
-//    func test_SignedInHomeView_navigationLinkToDestination_shouldNavigateToDestinationAndGoBack2() {
-//        // Given
-//
-//        // When
-//        tapNavigationLink(shouldDismissDestination: true)
-//
-//        // Then
-//        let navBar = app.navigationBars["Welcome"]
-//        XCTAssertTrue(navBar.exists)
-//    }
+    func test_UITestingBootcampView_invalidEmail_shouldShowError() {
+        // Given
+        //signUpAndSignIn(shouldTypeOnKeyboard: true, email: "invalid-email")
+        typeEmail("invalid-email")
+        
+        // Then
+        let errorText = app.staticTexts["EmailErrorText"]
+        XCTAssertTrue(errorText.exists)
+        
+        let signUpButton = app.buttons["SignUpButton"]
+        XCTAssertFalse(signUpButton.isEnabled)
+    }
+    
+    func test_UITestingBootcampView_validEmail_shouldNotShowError() {
+        // Given
+        //signUpAndSignIn(shouldTypeOnKeyboard: true)
+        typeEmail()
+
+        // Then
+        let errorText = app.staticTexts["EmailErrorText"]
+        XCTAssertFalse(errorText.exists)
+        
+        let signUpButton = app.buttons["SignUpButton"]
+        XCTAssertTrue(signUpButton.isEnabled)
+    }
 
 }
 
@@ -113,16 +126,12 @@ class UITestingBootcampView_UITests: XCTestCase {
 
 extension UITestingBootcampView_UITests {
     
-    func signUpAndSignIn(shouldTypeOnKeyboard: Bool) {
+    func signUpAndSignIn(shouldTypeOnKeyboard: Bool, email: String = "test@example.com") {
         let textfield = app.textFields["SignUpTextField"]
         textfield.tap()
         
         if shouldTypeOnKeyboard {
-            let keyA = app.keys["A"]
-            keyA.tap()
-            let keya = app.keys["a"]
-            keya.tap()
-            keya.tap()
+            textfield.typeText(email)
         }
 
         let returnButton = app.buttons["Return"]
@@ -156,6 +165,15 @@ extension UITestingBootcampView_UITests {
             let backButton = app.navigationBars.buttons["Welcome"]
             backButton.tap()
         }
+    }
+    
+    func typeEmail(_ email: String = "test@example.com") {
+        let textfield = app.textFields["SignUpTextField"]
+        textfield.tap()
+        textfield.typeText(email)
+        
+        let returnButton = app.buttons["Return"]
+        returnButton.tap()
     }
     
 }

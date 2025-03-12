@@ -9,16 +9,30 @@ import SwiftUI
 
 class UITestingBootcampViewModel: ObservableObject {
     
-    let placeholderText: String = "Add name here..."
+    let placeholderText: String = "Add email here..."
     @Published var textFieldText: String = ""
     @Published var currentUserIsSignedIn: Bool
+    @Published var isEmailValid: Bool = false
+    @Published var showEmailError: Bool = false
     
     init(currentUserIsSignedIn: Bool) {
         self.currentUserIsSignedIn = currentUserIsSignedIn
     }
+    
+    func validateEmail() {
+        let regex = "^(?:[\\p{L}0-9!#$%\\&'*+/=?\\^_`{|}~-]+(?:\\.[\\p{L}0-9!#$%\\&'*+/=?\\^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[\\p{L}0-9](?:[a-z0-9-]*[\\p{L}0-9])?\\.)+[\\p{L}0-9](?:[\\p{L}0-9-]*[\\p{L}0-9])?|\\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[\\p{L}0-9-]*[\\p{L}0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)\\])$"
+        
+        if let _ = textFieldText.range(of: regex, options: .regularExpression) {
+            isEmailValid = true
+            showEmailError = false
+        } else {
+            isEmailValid = false
+            showEmailError = !textFieldText.isEmpty
+        }
+    }
         
     func signUpButtonPressed() {
-        guard !textFieldText.isEmpty else { return }
+        guard !textFieldText.isEmpty && isEmailValid else { return }
         currentUserIsSignedIn = true
     }
     
@@ -68,13 +82,23 @@ struct UITestingBootcampView_Previews: PreviewProvider {
 extension UITestingBootcampView {
     
     private var signUpLayer: some View {
-        VStack {
+        VStack(alignment: .leading) {
             TextField(vm.placeholderText, text: $vm.textFieldText)
                 .font(.headline)
                 .padding()
                 .background(Color.white)
                 .cornerRadius(10)
                 .accessibilityIdentifier("SignUpTextField")
+                .onChange(of: vm.textFieldText) { _ in
+                    vm.validateEmail()
+                }
+            
+            if vm.showEmailError {
+                Text("Please enter a valid email address")
+                    .foregroundColor(.red)
+                    .font(.caption)
+                    .accessibilityIdentifier("EmailErrorText")
+            }
             
             Button(action: {
                 withAnimation(.spring()) {
@@ -86,15 +110,14 @@ extension UITestingBootcampView {
                     .padding()
                     .frame(maxWidth: .infinity)
                     .foregroundColor(.white)
-                    .background(Color.blue)
+                    .background(vm.isEmailValid ? Color.blue : Color.gray)
                     .cornerRadius(10)
             })
+            .disabled(!vm.isEmailValid)
             .accessibilityIdentifier("SignUpButton")
-
         }
         .padding()
     }
-    
 }
 
 struct SignedInHomeView: View {
